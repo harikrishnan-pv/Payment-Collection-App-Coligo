@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import {
   KeyboardAvoidingView,
-  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -57,10 +56,9 @@ export function PayScreen({ customer, onPaid }: PayScreenProps) {
   }
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
+    // Android 15+ enforces edge-to-edge, which disables adjustResize —
+    // so padding must be applied on both platforms.
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
       <ScrollView contentContainerStyle={spacing.screen} keyboardShouldPersistTaps="handled">
         <View style={styles.card}>
           <Text style={type.subtitle}>Pay EMI — {customer.accountNumber}</Text>
@@ -79,6 +77,8 @@ export function PayScreen({ customer, onPaid }: PayScreenProps) {
               if (error) setError("");
             }}
             keyboardType="decimal-pad"
+            returnKeyType="done"
+            onSubmitEditing={submit}
             accessibilityLabel="EMI amount"
             testID="amount-input"
           />

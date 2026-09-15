@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import {
   KeyboardAvoidingView,
-  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -44,10 +43,9 @@ export function HomeScreen({ onCustomerLoaded }: HomeScreenProps) {
   }
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
+    // Android 15+ enforces edge-to-edge, which disables adjustResize —
+    // so padding must be applied on both platforms.
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
       <ScrollView
         contentContainerStyle={styles.screen}
         keyboardShouldPersistTaps="handled"
@@ -76,6 +74,8 @@ export function HomeScreen({ onCustomerLoaded }: HomeScreenProps) {
             autoCapitalize="characters"
             autoCorrect={false}
             keyboardType="default"
+            returnKeyType="go"
+            onSubmitEditing={lookup}
             accessibilityLabel="Account number"
             testID="account-input"
           />
