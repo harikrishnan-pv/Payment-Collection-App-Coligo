@@ -1,0 +1,73 @@
+name: Build Android APK
+
+# Produces an installable release APK (debug-key signed for demo distribution)
+# and publishes it as a GitHub Release asset tagged `apk-latest`.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "apps/mobile/**"
+      - "packages/shared/**"
+      - ".github/workflows/build-apk.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build shared contract package
+        run: pnpm --filter @coligo/shared build
+
+      - name: Build release APK
+        working-directory: apps/mobile/android
+        env:
+          # Baked into the JS bundle at build time (see resolveBaseUrl in apps/mobile/src/services/api.ts)
+          EXPO_PUBLIC_API_URL: http://52.62.107.240/api
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: Collect APK
+        run: |
+          mkdir -p dist
+          cp apps/mobile/android/app/build/outputs/apk/release/app-release.apk dist/ColigoLoans-v1.0.0.apk
+          ls -lh dist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ColigoLoans-apk
+          path: dist/ColigoLoans-v1.0.0.apk
+
+      - name: Publish GitHub Release (apk-latest)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete apk-latest --yes --cleanup-tag || true
+          gh release create apk-latest dist/ColigoLoans-v1.0.0.apk \
+            --title "Coligo Loans — Android APK" \
+            --notes "Installable release APK (debug-key signed for demo distribution).
+          The production API URL (http://52.62.107.240/api) is baked in — install and use.
+          Rebuilt automatically from main by .github/workflows/build-apk.yml." \
+            --latest
