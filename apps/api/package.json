@@ -1,0 +1,35 @@
+{
+  "name": "@coligo/api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Coligo payment collection REST API (Express + Postgres)",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "start": "node dist/server.js",
+    "test": "vitest run",
+    "db:migrate": "tsx src/db/migrate.ts",
+    "db:seed": "tsx src/db/seed.ts",
+    "db:reset": "tsx src/db/migrate.ts && tsx src/db/seed.ts"
+  },
+  "dependencies": {
+    "@coligo/shared": "workspace:*",
+    "dotenv": "^16.4.5",
+    "express": "^5.1.0",
+    "pino": "^9.4.0",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.7.0",
+    "@types/pg": "^8.11.0",
+    "@types/supertest": "^6.0.2",
+    "pg": "^8.13.0",
+    "supertest": "^7.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.0.0"
+  }
+}

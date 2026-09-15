@@ -1,0 +1,21 @@
+{
+  "name": "payment-collection-app",
+  "private": true,
+  "packageManager": "pnpm@11.21.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck",
+    "db:up": "docker compose up -d",
+    "db:migrate": "pnpm --filter @coligo/api db:migrate",
+    "db:seed": "pnpm --filter @coligo/api db:seed",
+    "db:reset": "pnpm --filter @coligo/api db:reset"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.0"
+  }
+}

@@ -1,0 +1,35 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# builds
+dist/
+*.tsbuildinfo
+.turbo/
+
+# expo / react native
+.expo/
+ios/
+android/
+*.orig.*
+
+# env — never commit real secrets
+.env
+.env.local
+.env.*.local
+
+# logs / misc
+*.log
+.DS_Store
+coverage/
+
+# agent/tooling configs (local only, not part of the submission)
+.zcode/
+.claude/
+.agents/
+.opencode/
+_bmad/
+
+# SSH keys — never commit
+*.pem
+Key.pem

@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Coligo — Payment Collection API</title>
+<style>
+  :root { --blue:#0B5FA5; --ink:#1F2937; --muted:#64748B; --bg:#F5F7FA; --line:#E2E8F0; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background:var(--bg); color:var(--ink); line-height:1.6; }
+  .wrap { max-width: 780px; margin: 0 auto; padding: 48px 20px 80px; }
+  .logo { width:56px;height:56px;border-radius:16px;background:var(--blue);color:#fff;font-size:28px;font-weight:800;display:flex;align-items:center;justify-content:center;margin-bottom:16px; }
+  h1 { font-size:28px; margin:0 0 4px; }
+  .sub { color:var(--muted); margin:0 0 28px; }
+  .card { background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px 24px;margin-bottom:16px; }
+  h2 { font-size:15px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 12px; }
+  code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size:13px; }
+  pre { background:#0F172A;color:#E2E8F0;padding:14px 16px;border-radius:12px;overflow-x:auto; }
+  .m { color:#7DD3FC; } .k { color:#FDE68A; }
+  table { width:100%; border-collapse: collapse; font-size:14px; }
+  td { padding:8px 0; border-bottom:1px solid var(--line); vertical-align: top; }
+  td:first-child { white-space:nowrap; font-weight:600; padding-right:16px; }
+  a { color: var(--blue); }
+  .pill { display:inline-block;background:#E3EFF9;color:var(--blue);border-radius:999px;padding:2px 10px;font-size:12px;font-weight:700;margin:2px; }
+  footer { color:var(--muted); font-size:13px; margin-top:32px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="logo">C</div>
+  <h1>Coligo — Payment Collection App</h1>
+  <p class="sub">REST API for personal-loan EMI payments. The React Native (Expo) mobile app talks to this server via <code>/api</code>.</p>
+
+  <div class="card">
+    <h2>Endpoints</h2>
+    <table>
+      <tr><td><code>GET /api/customers</code></td><td>Loan details of all customers.</td></tr>
+      <tr><td><code>GET /api/customers/:account_number</code></td><td>Loan details for one account.</td></tr>
+      <tr><td><code>POST /api/payments</code></td><td>Record an EMI payment — body <code>{"accountNumber","amount"}</code>.</td></tr>
+      <tr><td><code>GET /api/payments/:account_number</code></td><td>Payment history for an account, newest first.</td></tr>
+      <tr><td><code>GET /api/health</code></td><td>Liveness probe.</td></tr>
+    </table>
+    <p style="margin-bottom:0">The Express service also serves the exact same handlers at the root paths (<code>/customers</code>, <code>/payments</code>).</p>
+  </div>
+
+  <div class="card">
+    <h2>Try it</h2>
+    <pre>curl <span class="k">http://HOST/api/customers</span>
+
+curl -X POST <span class="k">http://HOST/api/payments</span> \
+  -H <span class="m">"Content-Type: application/json"</span> \
+  -d <span class="m">'{"accountNumber":"ACC-100234","amount":12480.50}'</span>
+
+curl <span class="k">http://HOST/api/payments/ACC-100234</span></pre>
+  </div>
+
+  <div class="card">
+    <h2>Demo accounts (seed data)</h2>
+    <div>
+      <span class="pill">ACC-100234</span><span class="pill">ACC-100235</span><span class="pill">ACC-100236</span>
+      <span class="pill">ACC-100237</span><span class="pill">ACC-100238</span><span class="pill">ACC-100239</span>
+      <span class="pill">ACC-100240</span><span class="pill">ACC-100241</span><span class="pill">ACC-100242</span>
+      <span class="pill">ACC-100243</span><span class="pill">ACC-100244</span><span class="pill">ACC-100245</span>
+    </div>
+  </div>
+
+  <footer>Source &amp; docs: see the GitHub repository. Payments are recorded in an insert-only Postgres ledger; errors always return <code>{"error":{"code","message"}}</code>.</footer>
+</div>
+</body>
+</html>

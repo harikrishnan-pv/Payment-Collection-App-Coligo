@@ -1,0 +1,95 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test:
+    name: Build, typecheck & test
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: coligo
+          POSTGRES_PASSWORD: coligo_ci
+          POSTGRES_DB: coligo
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U coligo"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://coligo:coligo_ci@localhost:5432/coligo
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.21.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build shared + api
+        run: pnpm build
+
+      - name: Typecheck (mobile + shared + api)
+        run: pnpm typecheck
+
+      - name: API tests (against Postgres service)
+        run: pnpm --filter @coligo/api test
+
+  deploy:
+    name: Deploy API to AWS EC2
+    needs: build-test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_ec2
+          chmod 600 ~/.ssh/id_ec2
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Rsync source to server
+        run: |
+          rsync -az --delete \
+            --exclude node_modules \
+            --exclude .turbo \
+            --exclude .expo \
+            --exclude .git \
+            --exclude 'apps/api/.env' \
+            ./ ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ec2-user/app/
+
+      - name: Install, build, migrate and reload PM2
+        run: |
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            set -euo pipefail
+            cd /home/ec2-user/app
+            pnpm install --frozen-lockfile --filter @coligo/api...
+            pnpm --filter @coligo/api build
+            pnpm --filter @coligo/api db:migrate
+            pm2 startOrReload apps/api/ecosystem.config.js
+            pm2 save
+          EOF
+
+      - name: Smoke test deployed API
+        run: curl -fsS http://${{ secrets.EC2_HOST }}/api/health
