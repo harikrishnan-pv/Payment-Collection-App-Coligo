@@ -21,7 +21,7 @@ Deadline: 15:30 IST. Tracker for the build; update as stories complete.
 | 4.1 CI workflow | done | committed; push pending gh `workflow` scope refresh |
 | 4.2 Deploy job | done | same workflow; needs EC2 secrets |
 | 4.3 nginx + landing | done | deploy/nginx + deploy/landing in repo; server provisioning pending |
-| 4.4 Provisioning + smoke | pending | blocked on user's EC2 + Elastic IP |
+| 4.4 Provisioning + smoke | done | server provisioned via SSH; pipeline run 34938735321 green; public URL verified |
 | 5.1 Root README | done | all four mandated doc topics |
 | 5.2 API reference | done | landing page + README §4 |
 
