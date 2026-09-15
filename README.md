@@ -10,7 +10,24 @@ A hiring-test submission for **iNav Technologies**: a React Native (Expo) mobile
 | Repo tooling | pnpm workspaces + Turborepo monorepo |
 | Deploy | GitHub Actions → rsync + PM2 on Amazon Linux 2023 (EC2), Postgres 16 in Docker, nginx reverse proxy |
 
-**One repo, two deployables:** the API is deployed automatically to EC2 on every push to `main`; the mobile app runs via Expo Go against the deployed API (`EXPO_PUBLIC_API_URL`).
+**One repo, three artifacts:** the API deploys automatically to AWS EC2 on every push to `main`; the Android APK is built and published automatically to GitHub Releases; the same mobile code also runs via Expo Go for development (`EXPO_PUBLIC_API_URL` decides which API it talks to).
+
+---
+
+## Evaluator quick start
+
+| Deliverable | Where |
+|---|---|
+| **GitHub repo** | this repository |
+| **Android APK** | [Releases → latest](https://github.com/harikrishnan-pv/Payment-Collection-App-Coligo/releases/latest) — `ColigoLoans-v1.0.0.apk`, API URL baked in, install and use |
+| **Deployed API (AWS EC2)** | `http://52.62.107.240/api` (smoke: [`/api/health`](http://52.62.107.240/api/health)) |
+| **API landing page** | [`http://52.62.107.240/`](http://52.62.107.240/) — endpoint docs + copy-paste curls |
+
+**60-second tour:** install the APK → enter demo account `ACC-100234` → loan details (issue date, interest rate, tenure, EMI due) → **Pay EMI** (amount pre-filled) → confirmation with payment reference → **Payment history** (newest first). Cross-check the ledger: `curl http://52.62.107.240/api/payments/ACC-100234`.
+
+Demo accounts `ACC-100234` … `ACC-100245`. Business rule: **one EMI payment per account per calendar month** — a repeat attempt returns `409 EMI_ALREADY_PAID` (see §4).
+
+The product narrative — what Coligo is, who it serves, what shipped vs. deferred — is in [`_bmad-output/implementation-artifacts/product-walkthrough.md`](_bmad-output/implementation-artifacts/product-walkthrough.md).
 
 ---
 
@@ -80,9 +97,9 @@ The test-mandated endpoints (also served under `/api/*` by nginx on EC2):
 | `GET /payments/:account_number` | Payment history, newest first | account number |
 | `GET /health` | Liveness | — |
 
-Responses use camelCase DTOs from `packages/shared`. Every error is `{"error":{"code","message"}}` — `400` validation, `404` unknown account, `500` opaque to the client (details only in server logs).
+Responses use camelCase DTOs from `packages/shared`. Every error is `{"error":{"code","message"}}` — `400` validation, `404` unknown account, `409 EMI_ALREADY_PAID` when this account already has a successful payment in the current month, `500` opaque to the client (details only in server logs).
 
-**Schema & queries** (`apps/api/src/db/migrations/001_init.sql`): `customers` (unique index on `account_number`) and `payments` (composite index `(customer_id, payment_date DESC)`); payment history is a single join query riding both indexes; `POST /payments` is one atomic `INSERT … SELECT` that resolves the account and writes the ledger row.
+**Schema & queries** (`apps/api/src/db/migrations/001_init.sql`): `customers` (unique index on `account_number`) and `payments` (composite index `(customer_id, payment_date DESC)`); payment history is a single join query riding both indexes; `POST /payments` is one atomic `INSERT … SELECT` that resolves the account and writes the ledger row, guarded by the one-EMI-per-month check.
 
 ## 5. CI/CD pipeline (GitHub Actions)
 
@@ -90,6 +107,8 @@ Responses use camelCase DTOs from `packages/shared`. Every error is `{"error":{"
 
 1. **build-test** (every push/PR): install with pnpm → `turbo build` (shared + api) → typecheck all packages → run API tests against a Postgres 16 service container.
 2. **deploy** (`main` only, after tests pass): rsync the repo to the EC2 instance → on the server: `pnpm install --filter @coligo/api...`, build, run migrations, `pm2 startOrReload` → smoke-test `http://<host>/api/health`.
+
+`.github/workflows/build-apk.yml` — second workflow: builds the Android **release APK** (debug-key signed for demo distribution, `EXPO_PUBLIC_API_URL` baked in) and publishes it as the `apk-latest` GitHub Release on every mobile/shared change.
 
 Required **repository secrets**: `EC2_HOST`, `EC2_USER` (`ec2-user`), `EC2_SSH_KEY` (the `.pem` contents).
 
@@ -141,6 +160,7 @@ sudo systemctl reload nginx
 apps/
   api/          # Express API: routes → services → repositories, SQL migrations + seed
   mobile/       # Expo app: screens + reusable components + services/api.ts (only HTTP layer)
+    android/    # committed expo prebuild output — CI builds the release APK from it
 packages/
   shared/       # DTOs + zod schemas — the API contract, single source of truth
 deploy/         # nginx config + static landing page
@@ -151,6 +171,7 @@ _bmad-output/   # planning artifacts: PRD, architecture spine, epics & stories
 ## 8. Notes & trade-offs
 
 - **Payments are an insert-only ledger** with status `SUCCESS` (no real gateway — out of test scope). No customer-row mutation, so history is append-only and auditable.
+- **One EMI per account per calendar month** is enforced by the service layer (`409 EMI_ALREADY_PAID`). Known simplification: "month" is the calendar month of `payment_date`, not the per-loan billing cycle anchored on `issue_date`; a partial unique index would close the theoretical concurrent-insert race. Both are recorded in the PRD addendum.
 - **Auth is out of scope** per the requirements; the API is read-mostly and writes are strictly validated (zod on both client and server; parameterized SQL everywhere).
 - **HTTPS** would be Let's Encrypt + certbot on the same nginx; out of scope for the Elastic-IP demo endpoint.
 - Planning artifacts (PRD, architecture, epics/stories) live in `_bmad-output/` — included to show the process, not just the product.

@@ -26,3 +26,11 @@ Technical and mechanism decisions confirmed with Harikrishnan (2026-09-15). Thes
 - **Expo web export served on EC2** — reconciles "URL" + "React Native" elegantly, but candidate confirmed mobile-only intent; dropped.
 - **Supabase managed Postgres** — zero-ops, but self-hosted Postgres in Docker on EC2 better matches the test's deployment story and shows more DevOps skill.
 - **MySQL** — equal fit; Postgres chosen for better local Docker DX and `pg` ergonomics.
+
+## Late product decisions (2026-09-15, pre-submission)
+
+| Decision | Choice | Rationale |
+|---|---|---|
+| Duplicate EMI guard | **One `SUCCESS` payment per account per calendar month**; a repeat attempt returns `409 EMI_ALREADY_PAID` | Without it the payment form could be resubmitted endlessly, double-counting collections — a ledger-integrity rule a real collector app needs on day one |
+| APK deliverable | CI builds a **release APK** (debug-key signed) and publishes it as GitHub Release `apk-latest` on every mobile change | The machine-test response form requires an APK link; GitHub Releases gives a stable public URL with zero manual artifact handling |
+| Known simplification | "Month" = calendar month of `payment_date`, not the per-loan billing cycle anchored on `issue_date` | Sufficient for the demo dataset; production would derive due-date cycles per loan and harden the check with a partial unique index to close the concurrent-insert race |

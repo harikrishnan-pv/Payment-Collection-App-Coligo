@@ -24,5 +24,9 @@ Deadline: 15:30 IST. Tracker for the build; update as stories complete.
 | 4.4 Provisioning + smoke | done | server provisioned via SSH; pipeline run 34938735321 green; public URL verified |
 | 5.1 Root README | done | all four mandated doc topics |
 | 5.2 API reference | done | landing page + README §4 |
+| 5.3 Product walkthrough | done | `_bmad-output/implementation-artifacts/product-walkthrough.md`; PRD addendum carries late decisions |
+| 6.1 Android fixes from device testing | done | hardware back pops stack; safe-area header (react-native-safe-area-context); keyboard padding under edge-to-edge |
+| 6.2 One-EMI-per-month rule | done | 409 EMI_ALREADY_PAID; tests 14/14 |
+| 6.3 APK deliverable | done | build-apk.yml publishes `apk-latest` GitHub Release; API URL baked at bundle time |
 
-**Remaining blockers:** (1) user authorizes gh workflow scope (device code in chat) → push CI workflow; (2) EC2 Elastic IP + secrets → first deploy + smoke; (3) repo is PRIVATE — decide public or add evaluator as collaborator.
+**Remaining blockers:** repo visibility decision — repo was PRIVATE at last check; flip public (or add evaluator) before submitting the form.
