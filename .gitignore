@@ -10,7 +10,7 @@ dist/
 # expo / react native
 .expo/
 ios/
-android/
+/apps/mobile/android/app/build/
 *.orig.*
 
 # env — never commit real secrets
