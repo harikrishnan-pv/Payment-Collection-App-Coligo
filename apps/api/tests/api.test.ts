@@ -8,10 +8,26 @@ const DEMO_ACCOUNT = "ACC-100234";
 const UNKNOWN_ACCOUNT = "ACC-999999";
 
 let seededHistoryCount = 0;
+// Accounts with no payments this month, so insert tests are deterministic
+// under the one-EMI-per-month rule. Picked fresh in beforeAll.
+let payAccount = "";
+let historyAccount = "";
 
 beforeAll(async () => {
   const res = await request(app).get(`/payments/${DEMO_ACCOUNT}`);
   seededHistoryCount = res.status === 200 ? res.body.length : 0;
+
+  const customers = await request(app).get("/customers");
+  const accounts: string[] = customers.body.map((c: { accountNumber: string }) => c.accountNumber);
+  const empties: string[] = [];
+  for (const account of accounts) {
+    const history = await request(app).get(`/payments/${account}`);
+    if (history.status === 200 && history.body.length === 0) empties.push(account);
+    if (empties.length >= 2) break;
+  }
+  if (empties.length < 2) throw new Error("Seed data must expose 2+ accounts with no payments this month");
+  payAccount = empties[0];
+  historyAccount = empties[1];
 });
 
 describe("GET /health", () => {
@@ -56,16 +72,28 @@ describe("POST /payments", () => {
   it("records a payment and returns the acknowledgment payload", async () => {
     const res = await request(app)
       .post("/payments")
-      .send({ accountNumber: DEMO_ACCOUNT, amount: 12480.5 });
+      .send({ accountNumber: payAccount, amount: 12480.5 });
     expect(res.status).toBe(201);
     expect(res.body).toMatchObject({
       id: expect.stringMatching(/^[0-9a-f-]{36}$/),
-      accountNumber: DEMO_ACCOUNT,
+      accountNumber: payAccount,
       amount: 12480.5,
       status: "SUCCESS",
       paymentDate: expect.any(String),
     });
     expect(new Date(res.body.paymentDate).toString()).not.toBe("Invalid Date");
+  });
+
+  it("rejects a second EMI payment in the same month with 409", async () => {
+    const res = await request(app)
+      .post("/payments")
+      .send({ accountNumber: payAccount, amount: 12480.5 });
+    expect(res.status).toBe(409);
+    expect(res.body.error).toMatchObject({ code: "EMI_ALREADY_PAID" });
+
+    // The duplicate must not have been written to the ledger.
+    const history = await request(app).get(`/payments/${payAccount}`);
+    expect(history.body.length).toBe(1);
   });
 
   it("rejects non-positive amounts with 400 + envelope", async () => {
@@ -108,15 +136,15 @@ describe("POST /payments", () => {
 
 describe("GET /payments/:account_number", () => {
   it("returns history newest-first and includes fresh payments", async () => {
-    const before = await request(app).get(`/payments/${DEMO_ACCOUNT}`);
+    const before = await request(app).get(`/payments/${historyAccount}`);
     expect(before.status).toBe(200);
     const countBefore = before.body.length;
 
     const paid = await request(app)
       .post("/payments")
-      .send({ accountNumber: DEMO_ACCOUNT, amount: 1500 });
+      .send({ accountNumber: historyAccount, amount: 1500 });
 
-    const res = await request(app).get(`/payments/${DEMO_ACCOUNT}`);
+    const res = await request(app).get(`/payments/${historyAccount}`);
     expect(res.status).toBe(200);
     expect(res.body.length).toBe(countBefore + 1);
     expect(res.body[0].id).toBe(paid.body.id); // newest first

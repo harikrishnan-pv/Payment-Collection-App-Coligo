@@ -28,6 +28,18 @@ export async function insertSuccessPayment(
 
 export type HistoryRow = PaymentRow & { account_number: string };
 
+/** True when this customer already has a SUCCESS payment in the current calendar month. */
+export async function hasSuccessPaymentThisMonth(customerId: string): Promise<boolean> {
+  const { rows } = await query(
+    `SELECT 1 FROM payments
+     WHERE customer_id = $1 AND status = 'SUCCESS'
+       AND payment_date >= date_trunc('month', now())
+     LIMIT 1`,
+    [customerId]
+  );
+  return rows.length > 0;
+}
+
 /** History hot path: one join query riding both indexes (AD-8). */
 export async function findHistoryByAccount(accountNumber: string): Promise<HistoryRow[]> {
   const { rows } = await query<HistoryRow>(
