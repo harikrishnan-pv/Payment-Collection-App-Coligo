@@ -30,12 +30,22 @@ const customers: SeedCustomer[] = [
   { accountNumber: "ACC-100245", name: "Rohit Desai", issueDate: "2023-12-08", interestRate: 13.5, tenureMonths: 36, emiDue: 11890.75, outstanding: 134600, pastPayments: [{ monthsAgo: 3, amount: 11890.75 }, { monthsAgo: 2, amount: 11890.75 }, { monthsAgo: 1, amount: 11890.75 }] },
 ];
 
-async function seed(): Promise<void> {
+/**
+ * Restore the demo dataset: wipes and repopulates demo customers + payment
+ * history in one transaction. Seed payments are dated >= 1 month back, so
+ * after a reset every account can pay exactly once this month (one-EMI rule).
+ * Called by the CLI entry below and by POST /demo/reset.
+ */
+export async function resetDemoData(): Promise<{
+  customersReset: number;
+  paymentsRestored: number;
+}> {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
     await client.query("TRUNCATE payments, customers RESTART IDENTITY CASCADE");
 
+    let paymentsRestored = 0;
     for (const c of customers) {
       const { rows } = await client.query<{ id: string }>(
         `INSERT INTO customers (account_number, name, issue_date, interest_rate, tenure_months, emi_due, outstanding)
@@ -48,20 +58,26 @@ async function seed(): Promise<void> {
            VALUES ($1, now() - make_interval(months => $2), $3, 'SUCCESS')`,
           [rows[0].id, p.monthsAgo, p.amount]
         );
+        paymentsRestored++;
       }
     }
     await client.query("COMMIT");
-    console.log(`seeded ${customers.length} customers`);
+    return { customersReset: customers.length, paymentsRestored };
   } catch (err) {
     await client.query("ROLLBACK");
     throw err;
   } finally {
     client.release();
-    await pool.end();
   }
 }
 
-seed().catch((err) => {
-  console.error("seed failed:", err);
-  process.exit(1);
-});
+/** CLI entry: `pnpm --filter @coligo/api db:seed`. */
+if (process.argv[1]?.replace(/\\/g, "/").endsWith("src/db/seed.ts")) {
+  resetDemoData()
+    .then((r) => console.log(`seeded ${r.customersReset} customers`))
+    .catch((err) => {
+      console.error("seed failed:", err);
+      process.exit(1);
+    })
+    .finally(() => pool.end());
+}

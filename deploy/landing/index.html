@@ -36,8 +36,9 @@
     <table>
       <tr><td><code>GET /api/customers</code></td><td>Loan details of all customers.</td></tr>
       <tr><td><code>GET /api/customers/:account_number</code></td><td>Loan details for one account.</td></tr>
-      <tr><td><code>POST /api/payments</code></td><td>Record an EMI payment — body <code>{"accountNumber","amount"}</code>.</td></tr>
+      <tr><td><code>POST /api/payments</code></td><td>Record an EMI payment — body <code>{"accountNumber","amount"}</code>. One EMI per account per calendar month; a repeat gets <code>409 EMI_ALREADY_PAID</code>.</td></tr>
       <tr><td><code>GET /api/payments/:account_number</code></td><td>Payment history for an account, newest first.</td></tr>
+      <tr><td><code>POST /api/demo/reset</code></td><td>Reset demo data — wipes payments and re-seeds the 12 demo accounts, so every account can pay again.</td></tr>
       <tr><td><code>GET /api/health</code></td><td>Liveness probe.</td></tr>
     </table>
     <p style="margin-bottom:0">The Express service also serves the exact same handlers at the root paths (<code>/customers</code>, <code>/payments</code>).</p>
@@ -51,7 +52,10 @@ curl -X POST <span class="k">http://HOST/api/payments</span> \
   -H <span class="m">"Content-Type: application/json"</span> \
   -d <span class="m">'{"accountNumber":"ACC-100234","amount":12480.50}'</span>
 
-curl <span class="k">http://HOST/api/payments/ACC-100234</span></pre>
+curl <span class="k">http://HOST/api/payments/ACC-100234</span>
+
+<span class="m"># hit EMI_ALREADY_PAID? reset the demo data:</span>
+curl -X POST <span class="k">http://HOST/api/demo/reset</span></pre>
   </div>
 
   <div class="card">

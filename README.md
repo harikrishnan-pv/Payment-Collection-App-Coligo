@@ -22,8 +22,10 @@ A hiring-test submission for **iNav Technologies**: a React Native (Expo) mobile
 | **Android APK** | [Releases → latest](https://github.com/harikrishnan-pv/Payment-Collection-App-Coligo/releases/latest) — `ColigoLoans-v1.0.0.apk`, API URL baked in, install and use |
 | **Deployed API (AWS EC2)** | `http://52.62.107.240/api` (smoke: [`/api/health`](http://52.62.107.240/api/health)) |
 | **API landing page** | [`http://52.62.107.240/`](http://52.62.107.240/) — endpoint docs + copy-paste curls |
+| **Demo accounts** | `ACC-100234` … `ACC-100245` — start with `ACC-100234` (Ananya Menon, EMI ₹12,480.50) |
+| **Demo reset** | `curl -X POST http://52.62.107.240/api/demo/reset` — restores seed data, clears the one-EMI-per-month state |
 
-**60-second tour:** install the APK → enter demo account `ACC-100234` → loan details (issue date, interest rate, tenure, EMI due) → **Pay EMI** (amount pre-filled) → confirmation with payment reference → **Payment history** (newest first). Cross-check the ledger: `curl http://52.62.107.240/api/payments/ACC-100234`.
+**60-second tour:** install the APK → enter demo account `ACC-100234` → loan details (issue date, interest rate, tenure, EMI due) → **Pay EMI** (amount pre-filled) → confirmation with payment reference → **Payment history** (newest first). Cross-check the ledger: `curl http://52.62.107.240/api/payments/ACC-100234`. Pay twice on purpose — the repeat gets `409 EMI_ALREADY_PAID`; then `POST /api/demo/reset` to start fresh.
 
 Demo accounts `ACC-100234` … `ACC-100245`. Business rule: **one EMI payment per account per calendar month** — a repeat attempt returns `409 EMI_ALREADY_PAID` (see §4).
 
@@ -95,6 +97,7 @@ The test-mandated endpoints (also served under `/api/*` by nginx on EC2):
 | `GET /customers/:account_number` | One customer's loan details | account number |
 | `POST /payments` | Record an EMI payment | `{"accountNumber": "ACC-100234", "amount": 12480.50}` |
 | `GET /payments/:account_number` | Payment history, newest first | account number |
+| `POST /demo/reset` | Demo convenience: restore seed data (clears the one-EMI-per-month state) | — |
 | `GET /health` | Liveness | — |
 
 Responses use camelCase DTOs from `packages/shared`. Every error is `{"error":{"code","message"}}` — `400` validation, `404` unknown account, `409 EMI_ALREADY_PAID` when this account already has a successful payment in the current month, `500` opaque to the client (details only in server logs).

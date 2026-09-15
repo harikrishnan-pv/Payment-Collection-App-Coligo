@@ -90,6 +90,7 @@ jobs:
             pnpm --filter @coligo/api db:migrate
             pm2 startOrReload apps/api/ecosystem.config.js
             pm2 save
+            sudo cp /home/ec2-user/app/deploy/landing/index.html /var/www/coligo/index.html
           EOF
 
       - name: Smoke test deployed API

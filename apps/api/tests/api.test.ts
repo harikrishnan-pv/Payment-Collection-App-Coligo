@@ -167,3 +167,27 @@ describe("unknown routes", () => {
     expect(res.body.error.code).toBe("ROUTE_NOT_FOUND");
   });
 });
+
+// Runs last: the reset wipes everything the tests above inserted.
+describe("POST /demo/reset", () => {
+  it("restores the seed dataset and clears this month's payments", async () => {
+    const res = await request(app).post("/demo/reset");
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({
+      status: "reset",
+      customersReset: 12,
+      paymentsRestored: expect.any(Number),
+    });
+
+    // payAccount was paid by the tests above — the reset wiped that ledger row
+    const history = await request(app).get(`/payments/${payAccount}`);
+    expect(history.status).toBe(200);
+    expect(history.body.length).toBe(0);
+
+    // The demo account is back to exactly its seeded history, none of it this month
+    const demo = await request(app).get(`/payments/${DEMO_ACCOUNT}`);
+    expect(demo.body.length).toBe(3);
+    const newest = new Date(demo.body[0].paymentDate);
+    expect(newest.getUTCMonth()).not.toBe(new Date().getUTCMonth());
+  });
+});
