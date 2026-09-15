@@ -39,7 +39,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: pnpm
 
       - name: Install dependencies
@@ -85,7 +85,7 @@ jobs:
             set -euo pipefail
             cd /home/ec2-user/app
             pnpm install --frozen-lockfile --filter @coligo/api...
-            pnpm --filter @coligo/api build
+            pnpm --filter @coligo/api... build
             pnpm --filter @coligo/api db:migrate
             pm2 startOrReload apps/api/ecosystem.config.js
             pm2 save

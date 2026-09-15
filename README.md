@@ -5,7 +5,7 @@ A hiring-test submission for **iNav Technologies**: a React Native (Expo) mobile
 | Piece | Stack |
 |---|---|
 | `apps/mobile` | React Native 0.86 via Expo SDK 57, TypeScript |
-| `apps/api` | Node.js 20, Express 5, TypeScript, pg, zod, pino, vitest + supertest |
+| `apps/api` | Node.js 22, Express 5, TypeScript, pg, zod, pino, vitest + supertest |
 | `packages/shared` | Shared API contract — DTOs + zod schemas used by both apps |
 | Repo tooling | pnpm workspaces + Turborepo monorepo |
 | Deploy | GitHub Actions → rsync + PM2 on Amazon Linux 2023 (EC2), Postgres 16 in Docker, nginx reverse proxy |
@@ -16,7 +16,7 @@ A hiring-test submission for **iNav Technologies**: a React Native (Expo) mobile
 
 ## 1. Project setup
 
-Prerequisites: **Node 20+**, **pnpm 9+** (`corepack enable`), **Docker** (for the local Postgres), and the **Expo Go** app on your phone (or an Android/iOS emulator).
+Prerequisites: **Node 22+**, **pnpm 11+** (`corepack enable`), **Docker** (for the local Postgres), and the **Expo Go** app on your phone (or an Android/iOS emulator).
 
 ```bash
 git clone <repo-url> && cd payment-collection-app-coligo
@@ -101,7 +101,7 @@ Provisioning is a one-time manual step; every push to `main` afterwards deploys 
 
 ```bash
 sudo dnf update -y
-sudo dnf install -y nodejs20 nginx docker
+sudo dnf install -y nodejs22 nginx docker rsync
 sudo systemctl enable --now docker nginx
 sudo npm i -g pnpm pm2
 sudo usermod -aG docker ec2-user   # log out/in after this
