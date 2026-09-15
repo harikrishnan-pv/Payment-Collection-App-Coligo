@@ -1,6 +1,6 @@
 # Sprint Status — 2026-09-15 (single-day sprint)
 
-Deadline: 15:30 IST. Tracker for the build; update as stories complete.
+Single-day build sprint (2026-09-15). Tracker for the build; update as stories complete.
 
 | Story | Status | Notes |
 |---|---|---|
@@ -22,11 +22,12 @@ Deadline: 15:30 IST. Tracker for the build; update as stories complete.
 | 4.2 Deploy job | done | same workflow; needs EC2 secrets |
 | 4.3 nginx + landing | done | deploy/nginx + deploy/landing in repo; server provisioning pending |
 | 4.4 Provisioning + smoke | done | server provisioned via SSH; pipeline run 34938735321 green; public URL verified |
-| 5.1 Root README | done | all four mandated doc topics |
+| 5.1 Root README | done | all four required doc topics |
 | 5.2 API reference | done | landing page + README §4 |
 | 5.3 Product walkthrough | done | `_bmad-output/implementation-artifacts/product-walkthrough.md`; PRD addendum carries late decisions |
 | 6.1 Android fixes from device testing | done | hardware back pops stack; safe-area header (react-native-safe-area-context); keyboard padding under edge-to-edge |
-| 6.2 One-EMI-per-month rule | done | 409 EMI_ALREADY_PAID; tests 14/14 |
+| 6.2 One-EMI-per-month rule | done | 409 EMI_ALREADY_PAID; tests green |
 | 6.3 APK deliverable | done | build-apk.yml publishes `apk-latest` GitHub Release; API URL baked at bundle time |
+| 6.4 Demo reset endpoint | done | `POST /demo/reset` re-seeds demo data; landing page + README document it; suite 15/15 |
 
-**Remaining blockers:** repo visibility decision — repo was PRIVATE at last check; flip public (or add evaluator) before submitting the form.
+**Remaining blockers:** none — repo is public; APK release link, deployed API, and landing page all verified anonymously.

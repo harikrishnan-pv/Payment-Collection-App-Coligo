@@ -4,7 +4,7 @@ import { resetDemoData } from "../db/seed";
 export const demoRouter = Router();
 
 /**
- * Demo convenience (not part of the test-mandated contract): restore the seed
+ * Demo convenience (not part of the core contract): restore the seed
  * dataset. Useful after a 409 EMI_ALREADY_PAID, to demo the happy path again.
  */
 demoRouter.post("/reset", async (_req, res, next) => {

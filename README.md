@@ -1,6 +1,6 @@
 # Coligo — Payment Collection App (Mobile)
 
-A hiring-test submission for **iNav Technologies**: a React Native (Expo) mobile app where personal-loan customers view their loan details and pay EMIs, backed by a Node.js/Express REST API with PostgreSQL, deployed to AWS EC2 through GitHub Actions.
+**Coligo** is a personal-loan payment collection app: a React Native (Expo) mobile app where customers view their loan details and pay EMIs, backed by a Node.js/Express REST API with PostgreSQL, deployed to AWS EC2 through GitHub Actions.
 
 | Piece | Stack |
 |---|---|
@@ -14,9 +14,9 @@ A hiring-test submission for **iNav Technologies**: a React Native (Expo) mobile
 
 ---
 
-## Evaluator quick start
+## Quick start
 
-| Deliverable | Where |
+| What | Where |
 |---|---|
 | **GitHub repo** | this repository |
 | **Android APK** | [Releases → latest](https://github.com/harikrishnan-pv/Payment-Collection-App-Coligo/releases/latest) — `ColigoLoans-v1.0.0.apk`, API URL baked in, install and use |
@@ -89,7 +89,7 @@ Then in the app: enter a demo account number → loan details → **Pay EMI** �
 
 ## 4. REST API
 
-The test-mandated endpoints (also served under `/api/*` by nginx on EC2):
+The REST endpoints (also served under `/api/*` by nginx on EC2):
 
 | Method & path | Purpose | Body / params |
 |---|---|---|
@@ -173,7 +173,7 @@ _bmad-output/   # planning artifacts: PRD, architecture spine, epics & stories
 
 ## 8. Notes & trade-offs
 
-- **Payments are an insert-only ledger** with status `SUCCESS` (no real gateway — out of test scope). No customer-row mutation, so history is append-only and auditable.
+- **Payments are an insert-only ledger** with status `SUCCESS` (no real gateway — out of scope). No customer-row mutation, so history is append-only and auditable.
 - **One EMI per account per calendar month** is enforced by the service layer (`409 EMI_ALREADY_PAID`). Known simplification: "month" is the calendar month of `payment_date`, not the per-loan billing cycle anchored on `issue_date`; a partial unique index would close the theoretical concurrent-insert race. Both are recorded in the PRD addendum.
 - **Auth is out of scope** per the requirements; the API is read-mostly and writes are strictly validated (zod on both client and server; parameterized SQL everywhere).
 - **HTTPS** would be Let's Encrypt + certbot on the same nginx; out of scope for the Elastic-IP demo endpoint.

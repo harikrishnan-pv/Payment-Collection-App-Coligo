@@ -7,25 +7,25 @@ updated: 2026-09-15
 
 # PRD — Payment Collection App (Coligo)
 
-**Prologue.** iNav Technologies hiring-test deliverable, due 2026-09-15 15:30 IST. A personal-loan customer uses a mobile app to look up their loan details and pay their EMI; a Node.js API backed by Postgres serves the data and records payments. Graded on frontend UX, API correctness, schema design, CI/CD, and documentation.
+**Prologue.** Coligo is a personal-loan payment collection app: a customer uses a mobile app to look up their loan details and pay their EMI; a Node.js API backed by Postgres serves the data and records payments. Quality bars: frontend UX, API correctness, schema design, CI/CD, and documentation.
 
 ## 1. Problem & Purpose
 
-Loan customers need a simple way to see what they owe (EMI, rate, tenure) and make a payment from their phone, receiving proof of payment immediately. The hiring test prescribes the exact surface: a mobile app plus a REST API plus an automated deployment.
+Loan customers need a simple way to see what they owe (EMI, rate, tenure) and make a payment from their phone, receiving proof of payment immediately. The product surface is deliberately tight: a mobile app plus a REST API plus an automated deployment.
 
 ## 2. Success Metrics
 
 | Metric | Target | Counter-metric |
 |---|---|---|
-| Evaluation criteria coverage | All 5 graded areas demonstrably satisfied | — |
+| Quality bars | Frontend UX, API correctness, schema design, CI/CD, docs — all demonstrably satisfied | — |
 | API p95 latency (loan lookup, payment) | < 500 ms on EC2 t3.micro | Error rate stays 0 under smoke test |
-| Cold-start demo | Evaluator can go from clone → running locally in ≤ 10 min using README only | README length stays ≤ 2 screens per section |
+| Cold-start demo | A new developer can go from clone → running locally in ≤ 10 min using README only | README length stays ≤ 2 screens per section |
 
 ## 3. User Journeys
 
 **UJ-1: Pay this month's EMI.** Ananya has a personal loan. She opens the app, enters her account number, and sees her loan card: account number, issue date, interest rate, tenure, and EMI due. She taps *Pay EMI*, the amount is pre-filled with the EMI due [ASSUMPTION: pre-fill, editable], she confirms, and gets a confirmation acknowledgment with payment details (amount, date, status, reference). If she enters a wrong amount she can edit before submitting; if the account number doesn't exist she sees a clear inline error.
 
-**UJ-2: Check payment history.** Ananya opens *Payment History* for her account and sees a chronological list of payments with date, amount, and status. [ASSUMPTION: history is in scope of the mobile app, not just the API — the test lists the API endpoint; showing it in-app strengthens the demo.]
+**UJ-2: Check payment history.** Ananya opens *Payment History* for her account and sees a chronological list of payments with date, amount, and status. [ASSUMPTION: history is in scope of the mobile app, not just the API — the requirements list the API endpoint; showing it in-app strengthens the product.]
 
 ## 4. Functional Requirements
 
@@ -61,10 +61,10 @@ Loan customers need a simple way to see what they owe (EMI, rate, tenure) and ma
 
 ## 6. Constraints & Out of Scope
 
-**Constraints:** single GitHub repository (monorepo, per candidate's clarification); React Native mobile (no web build); Postgres; deadline 15:30 IST today.
+**Constraints:** single GitHub repository (monorepo); React Native mobile (no web build); Postgres; single-day build window (2026-09-15).
 
 **Out of scope:** authentication/login, real payment gateway integration, push notifications, multi-currency, admin panel.
 
 ## 7. Open Questions
 
-- **OQ-1:** Does the "deployed application URL" deliverable mean the backend API URL? Candidate is confirming with the team; current plan assumes yes — EC2 serves the API at `http://<elastic-ip>/api/...`.
+- **OQ-1 (resolved):** the "deployed application URL" is the backend API URL — EC2 serves the API at `http://52.62.107.240/api/...`, with a status page at the root.

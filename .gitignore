@@ -23,7 +23,7 @@ ios/
 .DS_Store
 coverage/
 
-# agent/tooling configs (local only, not part of the submission)
+# agent/tooling configs (local only, not part of the app)
 .zcode/
 .claude/
 .agents/

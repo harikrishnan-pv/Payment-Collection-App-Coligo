@@ -19,13 +19,13 @@ companions: []
 
 **API:** layered monolith — `routes → services → repositories`. Routes own HTTP (parse, validate, status codes); services own business rules; repositories own SQL. No SQL above the repository layer; no HTTP concerns below routes.
 
-**Mobile:** thin client — `screens (components/hooks) → services/api-client → shared types`. Screens never `fetch` directly; all HTTP goes through `apps/mobile/src/services/api.ts`. The test grades "components, services" — this layering is the deliverable.
+**Mobile:** thin client — `screens (components/hooks) → services/api-client → shared types`. Screens never `fetch` directly; all HTTP goes through `apps/mobile/src/services/api.ts`. Components + services separation is an explicit requirement — this layering is the deliverable.
 
 ## Invariants & Rules
 
 ### AD-1 — Mandated REST contract is frozen
 - **Binds:** FR-6, FR-7, FR-8, apps/api routes, nginx
-- **Prevents:** route drift from the graded endpoints
+- **Prevents:** route drift from the required endpoints
 - **Rule:** Express serves the mandated paths at root: `GET /customers`, `POST /payments`, `GET /payments/:account_number`, plus documented conveniences `GET /customers/:account_number` (single-loan lookup) and `GET /health`. nginx exposes the same handlers under `/api/*` (prefix stripped via `proxy_pass http://127.0.0.1:3000/;`); the mobile app always calls `EXPO_PUBLIC_API_URL` (`http://<host>/api`).
 
 ### AD-2 — Shared contract package is the single source of truth
@@ -50,7 +50,7 @@ companions: []
 
 ### AD-6 — Config only via environment variables
 - **Binds:** NFR-2, NFR-3, CI/CD, deployment
-- **Prevents:** secrets in git; API URL hardcoding (explicitly graded)
+- **Prevents:** secrets in git; API URL hardcoding (explicit requirement)
 - **Rule:** API reads `DATABASE_URL`, `PORT`, `NODE_ENV`. Mobile reads `EXPO_PUBLIC_API_URL` (Expo build-time inlining). `.env.example` committed for both; real values only in GitHub Actions secrets + server `.env`.
 
 ### AD-7 — Deployment topology is single-instance EC2, PM2 + Docker Postgres
@@ -59,8 +59,8 @@ companions: []
 - **Rule:** CI (GitHub Actions, on push to `main`): pnpm install → `turbo run build test typecheck` → rsync `apps/api` build + `packages/shared` to EC2 → `pm2 reload`. Postgres 16 runs in Docker on EC2 bound to `127.0.0.1:5432` only. nginx :80 proxies `/api/` → PM2 (port 3000) and serves a static landing page at `/`. AL2023.
 
 ### AD-8 — Query path optimization is explicit
-- **Binds:** DB, FR-6, FR-8 (graded: query optimization)
-- **Prevents:** unindexed scans the grader can see through
+- **Binds:** DB, FR-6, FR-8 (requirement: query optimization)
+- **Prevents:** unindexed scans on hot paths
 - **Rule:** `GET /payments/:account_number` resolves account → id via the unique index, then one indexed query on `payments(customer_id, payment_date DESC)`. Composite index `(customer_id, payment_date)` required in the migration. `GET /customers` is a single indexed table scan with LIMIT.
 
 ## Consistency Conventions
@@ -130,8 +130,8 @@ erDiagram
 
 ## Deferred
 
-- Auth/OTP — out of scope (test doesn't ask); revisit only if team demands.
+- Auth/OTP — out of scope for v1; top of the production backlog.
 - Payment gateway integration — simulated success only.
 - Balance/next-due recalculation after payment — v2 after ledger (AD-4).
-- HTTPS/domain — HTTP + Elastic IP for the test; document Let's Encrypt path in README.
+- HTTPS/domain — HTTP + Elastic IP for the demo endpoint; document Let's Encrypt path in README.
 - E2E mobile tests — tsc typecheck + lint in CI only.
