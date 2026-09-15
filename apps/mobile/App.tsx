@@ -1,5 +1,6 @@
-import React, { useCallback, useState } from "react";
-import { Pressable, StyleSheet, Text, View, SafeAreaView } from "react-native";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { Pressable, StyleSheet, Text, View, BackHandler } from "react-native";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import type { CustomerDto, PaymentDto } from "@coligo/shared";
 import { HomeScreen } from "./src/screens/HomeScreen";
@@ -12,6 +13,7 @@ import { colors } from "./src/theme";
 /**
  * Lightweight stack navigation: a Route union + an array of routes.
  * Right-sized for a 5-screen linear flow; no navigation library needed.
+ * Android hardware back is wired to pop the stack (exit only from home).
  */
 type Route =
   | { name: "home" }
@@ -29,6 +31,14 @@ const TITLES: Record<Route["name"], string> = {
 };
 
 export default function App() {
+  return (
+    <SafeAreaProvider>
+      <AppShell />
+    </SafeAreaProvider>
+  );
+}
+
+function AppShell() {
   const [stack, setStack] = useState<Route[]>([{ name: "home" }]);
   const current = stack[stack.length - 1];
 
@@ -36,8 +46,23 @@ export default function App() {
   const pop = useCallback(() => setStack((s) => (s.length > 1 ? s.slice(0, -1) : s)), []);
   const goHome = useCallback(() => setStack([{ name: "home" }]), []);
 
+  // Mirror of stack depth so the BackHandler closure always sees the current value
+  const depthRef = useRef(stack.length);
+  depthRef.current = stack.length;
+
+  useEffect(() => {
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      if (depthRef.current > 1) {
+        pop();
+        return true; // consumed: we popped a screen
+      }
+      return false; // at home: let Android exit the app
+    });
+    return () => sub.remove();
+  }, [pop]);
+
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
       <StatusBar style="dark" />
       {current.name !== "home" ? (
         <View style={styles.header}>
